@@ -43,7 +43,7 @@ func reduce(key []byte, vals <-chan []byte, output chan<- []byte) {
 func runReducer() {
 	// Start a goroutine that will write output, then quit when it's done.
 	doneWriting := make(chan bool)
-	keyedOutput := make(chan keyVal)
+	keyedOutput := make(chan string)
 	go func() {
 		for outputElement := range keyedOutput {
 			fmt.Printf("%s\n", outputElement)
