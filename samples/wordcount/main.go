@@ -20,17 +20,17 @@ import (
 	"log"
 )
 
-var g_mode = flag.String("mode", "", "\"map\" or \"reduce\"")
+var g_mode = flag.String("mode", "", "\"mapper\" or \"reduce\"")
 
 func main() {
 	flag.Parse()
 
 	// Run in the appropriate mode.
 	switch *g_mode {
-	case "map":
+	case "mapper":
 		runMapper()
 		return
-	case "reduce":
+	case "reducer":
 		runReducer()
 		return
 	default:
