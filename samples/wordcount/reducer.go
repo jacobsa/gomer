@@ -16,8 +16,11 @@
 package main
 
 import (
+	"bufio"
+	"bytes"
 	"fmt"
-	"reducer"
+	"io"
+	"os"
 	"strconv"
 )
 
@@ -40,10 +43,10 @@ func reduce(key []byte, vals <-chan []byte, output chan<- []byte) {
 func runReducer() {
 	// Start a goroutine that will write output, then quit when it's done.
 	doneWriting := make(chan bool)
-	output := make(chan keyVal)
+	keyedOutput := make(chan keyVal)
 	go func() {
-		for outputElement := range output {
-			fmt.Printf("%s\t%s\n", outputElement.key, outputElement.val)
+		for outputElement := range keyedOutput {
+			fmt.Printf("%s\n", outputElement)
 		}
 
 		doneWriting<- true
@@ -52,7 +55,7 @@ func runReducer() {
 	// Start a function that groups by key.
 	type keyAndValChan struct {
 		key []byte
-		vals <-chan []byte
+		vals chan []byte
 	}
 
 	groupedInput := make(chan keyAndValChan)
@@ -77,7 +80,7 @@ func runReducer() {
 				val := elems[1]
 
 				// Is this a new key?
-				if currentGrouping == nil || !bytes.Equal(currentGrouping.key, key) {
+				if currentGrouping.key == nil || !bytes.Equal(currentGrouping.key, key) {
 					close(currentGrouping.vals)
 					currentGrouping.key = key;
 					currentGrouping.vals = make(chan []byte)
@@ -105,10 +108,25 @@ func runReducer() {
 
 	// Reduce each grouped input.
 	for elem := range groupedInput {
-		reduce(elem.key, elem.vals, output)
+		// Pump output values.
+		unkeyedOutputs := make(chan []byte)
+		donePumping := make(chan bool)
+
+		go func() {
+			for unkeyedOutput := range unkeyedOutputs {
+				keyedOutput <- fmt.Sprintf("%s\t%s", elem.key, unkeyedOutput)
+			}
+			donePumping <- true
+		}()
+
+		// Call the reducer.
+		reduce(elem.key, elem.vals, unkeyedOutputs)
+
+		close(unkeyedOutputs)
+		<-donePumping
 	}
 
 	// Close the channel and wait for output to be flushed.
-	close(output)
+	close(keyedOutput)
 	<-doneWriting
 }
