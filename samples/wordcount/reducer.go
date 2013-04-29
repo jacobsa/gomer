@@ -81,7 +81,10 @@ func runReducer() {
 
 				// Is this a new key?
 				if currentGrouping.key == nil || !bytes.Equal(currentGrouping.key, key) {
-					close(currentGrouping.vals)
+					if currentGrouping.vals != nil {
+						close(currentGrouping.vals)
+					}
+
 					currentGrouping.key = key;
 					currentGrouping.vals = make(chan []byte)
 					groupedInput <- currentGrouping
@@ -93,7 +96,9 @@ func runReducer() {
 
 			// Did we finish cleanly?
 			if err == io.EOF {
-				close(currentGrouping.vals)
+				if currentGrouping.vals != nil {
+					close(currentGrouping.vals)
+				}
 				break
 			}
 
