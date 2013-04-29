@@ -69,7 +69,10 @@ func runReducer() {
 			line, err := reader.ReadBytes('\n')
 
 			// Process the bytes, if any.
-			if len(line) > 0 {
+			if len(line) > 1 {
+				// Throw away the delimeter.
+				line = line[0:len(line)-1]
+
 				// Split into key and value.
 				elems := bytes.SplitN(line, []byte("\t"), 2)
 				if len(elems) != 2 {
