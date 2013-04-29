@@ -58,7 +58,7 @@ func runMapper() {
 		// Process the bytes, if any.
 		//
 		// TODO(jacobsa): Support keys in input.
-		if len(line) > 0 {
+		if len(line) > 1 {
 			// Throw away the delimeter.
 			line = line[0:len(line)-1]
 
