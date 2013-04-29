@@ -17,8 +17,27 @@ package main
 
 import (
 	"flag"
+	"log"
 )
 
 var g_mode = flag.String("mode", "", "\"map\" or \"reduce\"")
 
-func main()
+func runMapper()
+
+func runReducer()
+
+func main() {
+	flag.Parse()
+
+	// Run in the appropriate mode.
+	switch *g_mode {
+	case "map":
+		runMapper()
+		return
+	case "reduce":
+		runReducer()
+		return
+	default:
+		log.Fatalf("Invalid --mode: %s", *g_mode)
+	}
+}
