@@ -17,6 +17,7 @@ package main
 
 import (
 	"fmt"
+	"reducer"
 	"strconv"
 )
 
@@ -34,4 +35,80 @@ func reduce(key []byte, vals <-chan []byte, output chan<- []byte) {
 
 	// Output the total.
 	output <- []byte(strconv.FormatUint(total, 10))
+}
+
+func runReducer() {
+	// Start a goroutine that will write output, then quit when it's done.
+	doneWriting := make(chan bool)
+	output := make(chan keyVal)
+	go func() {
+		for outputElement := range output {
+			fmt.Printf("%s\t%s\n", outputElement.key, outputElement.val)
+		}
+
+		doneWriting<- true
+	}()
+
+	// Start a function that groups by key.
+	type keyAndValChan struct {
+		key []byte
+		vals <-chan []byte
+	}
+
+	groupedInput := make(chan keyAndValChan)
+	go func() {
+		// Process each line.
+		reader := bufio.NewReader(os.Stdin)
+		var currentGrouping keyAndValChan
+
+		for {
+			// Grab the next line.
+			line, err := reader.ReadBytes('\n')
+
+			// Process the bytes, if any.
+			if len(line) > 0 {
+				// Split into key and value.
+				elems := bytes.SplitN(line, []byte("\t"), 2)
+				if len(elems) != 2 {
+					panic(fmt.Sprintf("Invalid line: %s", line))
+				}
+
+				key := elems[0]
+				val := elems[1]
+
+				// Is this a new key?
+				if currentGrouping == nil || !bytes.Equal(currentGrouping.key, key) {
+					close(currentGrouping.vals)
+					currentGrouping.key = key;
+					currentGrouping.vals = make(chan []byte)
+					groupedInput <- currentGrouping
+				}
+
+				// Pass the value.
+				currentGrouping.vals <- val
+			}
+
+			// Did we finish cleanly?
+			if err == io.EOF {
+				close(currentGrouping.vals)
+				break
+			}
+
+			// Did we fail for some other reason?
+			if err != nil {
+				panic(fmt.Sprintf("ReadBytes: %v", err))
+			}
+		}
+
+		close(groupedInput)
+	}()
+
+	// Reduce each grouped input.
+	for elem := range groupedInput {
+		reduce(elem.key, elem.vals, output)
+	}
+
+	// Close the channel and wait for output to be flushed.
+	close(output)
+	<-doneWriting
 }

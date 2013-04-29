@@ -22,8 +22,6 @@ import (
 
 var g_mode = flag.String("mode", "", "\"map\" or \"reduce\"")
 
-func runReducer()
-
 func main() {
 	flag.Parse()
 
