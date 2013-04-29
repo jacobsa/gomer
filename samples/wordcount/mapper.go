@@ -31,3 +31,46 @@ func mapEntry(entry keyVal, output chan<- keyVal) {
 		output <- keyVal{word, []byte("1")}
 	}
 }
+
+func runMapper() {
+	// Grab input a line at a time.
+	reader := bufio.NewReader(os.Stdin)
+
+	// Start a goroutine that will write output, then quit when it's done.
+	doneWriting := make(chan bool)
+	output := make(chan []keyVal)
+	go func() {
+		for outputElement := range output {
+			fmt.Printf("%s\t%s\n", output.key, output.val)
+		}
+
+		doneWriting<- true
+	}()
+
+	for {
+		// Grab the next line.
+		line, err := reader.ReadBytes('\n')
+
+		// Process the bytes, if any.
+		//
+		// TODO(jacobsa): Support keys in input.
+		if len(line) > 0 {
+			key := []byte{}
+			val := line
+			mapEntry(keyVal{key, val}, output)
+		}
+
+		// Did we finish cleanly?
+		if err == io.EOF {
+			break
+		}
+
+		// Did we fail for some other reason?
+		if err != nil {
+			panic(fmt.Sprintf("ReadBytes: %v", err))
+		}
+	}
+
+	// Wait for output to be flushed.
+	<-doneWriting
+}

@@ -16,13 +16,13 @@
 package main
 
 import (
+	"bufio"
 	"flag"
 	"log"
+	"os"
 )
 
 var g_mode = flag.String("mode", "", "\"map\" or \"reduce\"")
-
-func runMapper()
 
 func runReducer()
 
