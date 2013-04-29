@@ -74,6 +74,7 @@ func runMapper() {
 		}
 	}
 
-	// Wait for output to be flushed.
+	// Close the channel and wait for output to be flushed.
+	close(output)
 	<-doneWriting
 }
