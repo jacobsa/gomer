@@ -59,6 +59,9 @@ func runMapper() {
 		//
 		// TODO(jacobsa): Support keys in input.
 		if len(line) > 0 {
+			// Throw away the delimeter.
+			line = line[0:len(line)-1]
+
 			key := []byte{}
 			val := line
 			mapEntry(keyVal{key, val}, output)
