@@ -19,6 +19,7 @@ import (
 	"bufio"
 	"bytes"
 	"fmt"
+	"io"
 	"os"
 )
 
@@ -41,7 +42,7 @@ func runMapper() {
 
 	// Start a goroutine that will write output, then quit when it's done.
 	doneWriting := make(chan bool)
-	output := make(chan []keyVal)
+	output := make(chan keyVal)
 	go func() {
 		for outputElement := range output {
 			fmt.Printf("%s\t%s\n", outputElement.key, outputElement.val)
