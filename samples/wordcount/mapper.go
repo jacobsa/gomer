@@ -16,7 +16,10 @@
 package main
 
 import (
+	"bufio"
 	"bytes"
+	"fmt"
+	"os"
 )
 
 type keyVal struct {
@@ -41,7 +44,7 @@ func runMapper() {
 	output := make(chan []keyVal)
 	go func() {
 		for outputElement := range output {
-			fmt.Printf("%s\t%s\n", output.key, output.val)
+			fmt.Printf("%s\t%s\n", outputElement.key, outputElement.val)
 		}
 
 		doneWriting<- true
