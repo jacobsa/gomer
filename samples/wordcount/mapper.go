@@ -17,11 +17,13 @@ package main
 
 import (
 	"bufio"
-	"bytes"
 	"fmt"
 	"io"
 	"os"
+	"regexp"
 )
+
+var g_wordRegexp *regexp.Regexp = regexp.MustCompile(`\w+`)
 
 type keyVal struct {
 	key []byte
@@ -30,7 +32,7 @@ type keyVal struct {
 
 func mapEntry(entry keyVal, output chan<- keyVal) {
 	// Split the line into words.
-	words := bytes.Split(entry.val, []byte(" "))
+	words := g_wordRegexp.FindAll(entry.val, -1)
 	for _, word := range words {
 		output <- keyVal{word, []byte("1")}
 	}
